@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mushfeek &amp; Haifa — Study Progress</title>
+<style>
+  :root {
+    --bg: #0b1020; --panel: #131b2f; --panel2: #18233b; --text: #edf2ff;
+    --muted: #9aa8c7; --accent: #8b7cff; --accent2: #42d6b5; --border: #283653;
+    --easy: #42d6b5; --hard: #ffb86b; --danger: #ff7c91;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; color: var(--text);
+    background: radial-gradient(ellipse at top left, #20204a 0%, transparent 42%),
+                radial-gradient(ellipse at bottom right, #103c43 0%, transparent 36%), var(--bg);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 34px 20px 60px; }
+  header { display:flex; justify-content:space-between; gap:18px; align-items:center; margin-bottom:26px; }
+  .eyebrow { color: var(--accent2); text-transform:uppercase; letter-spacing:.16em; font-size:.75rem; font-weight:800; }
+  h1 { margin:7px 0 8px; font-size:clamp(2rem, 5vw, 3.25rem); letter-spacing:-.05em; line-height:1.05; }
+  .sub { color:var(--muted); margin:0; max-width:640px; line-height:1.6; }
+  .header-actions { display:flex; gap:10px; flex-wrap:wrap; }
+  button { cursor:pointer; border:1px solid var(--border); border-radius:12px; padding:10px 14px; color:var(--text); background:#1b2741; font-weight:700; transition:.15s ease; }
+  button:hover { transform:translateY(-1px); border-color:var(--accent); }
+  button.primary { background:var(--accent); color:#fff; border-color:transparent; }
+  button.small { padding:8px 10px; font-size:.82rem; }
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:26px 0 20px; }
+  .stat, .progress-panel, .subject { background:rgba(19,27,47,.88); border:1px solid var(--border); border-radius:18px; }
+  .stat { padding:18px 20px; }
+  .stat-label { color:var(--muted); font-size:.86rem; }
+  .stat-value { font-size:1.8rem; font-weight:850; margin-top:5px; letter-spacing:-.04em; }
+  .progress-panel { padding:18px 20px; margin-bottom:26px; }
+  .progress-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
+  .progress-head strong { font-size:1rem; }
+  .progress-head span { color:var(--accent2); font-weight:800; }
+  .bar { width:100%; height:10px; border-radius:99px; background:#27334e; overflow:hidden; }
+  .bar-fill { width:0%; height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:99px; transition:width .35s ease; }
+  .section-title { display:flex; justify-content:space-between; align-items:end; gap:12px; margin:30px 0 14px; }
+  .section-title h2 { margin:0; font-size:1.25rem; }
+  .section-title p { color:var(--muted); margin:5px 0 0; font-size:.9rem; }
+  .tag { border-radius:99px; padding:5px 9px; font-size:.72rem; font-weight:800; letter-spacing:.04em; }
+  .tag.easy { background:#153d3b; color:var(--easy); }
+  .tag.hard { background:#44301f; color:var(--hard); }
+  .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+  .subject { padding:18px; transition:opacity .2s,border-color .2s; }
+  .subject.done { opacity:.58; border-color:#2c776e; }
+  .subject-top { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+  .subject h3 { margin:0; font-size:1.08rem; }
+  .subject.done h3 { text-decoration:line-through; text-decoration-thickness:2px; }
+  .meta { color:var(--muted); font-size:.82rem; margin-top:6px; }
+  .days { display:flex; flex-wrap:wrap; gap:8px; margin:17px 0 14px; }
+  .day { display:flex; align-items:center; gap:6px; border:1px solid var(--border); border-radius:10px; padding:8px 10px; font-size:.82rem; color:#d7e0f7; background:#10182a; cursor:pointer; user-select:none; }
+  .day input { accent-color:var(--accent2); width:15px; height:15px; margin:0; cursor:pointer; }
+  .day.checked { background:#143630; border-color:#28695f; color:#aaf4df; }
+  .subject-foot { display:flex; justify-content:space-between; align-items:center; gap:10px; padding-top:12px; border-top:1px solid var(--border); }
+  .subject-progress { font-size:.82rem; color:var(--muted); }
+  .subject-progress b { color:var(--text); }
+  .finish { font-size:.8rem; padding:8px 10px; }
+  .finish:disabled { cursor:default; opacity:.6; transform:none; }
+  .empty-state { display:none; text-align:center; padding:36px 18px; background:rgba(19,27,47,.9); border:1px solid var(--border); border-radius:18px; margin-top:18px; }
+  .empty-state.show { display:block; }
+  .empty-state .emoji { font-size:3rem; }
+  .empty-state h2 { margin:10px 0 8px; }
+  .empty-state p { color:var(--muted); line-height:1.6; }
+  .toast { position:fixed; inset:0; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(4,8,18,.78); z-index:10; }
+  .toast.show { display:flex; }
+  .celebration { width:min(480px,100%); padding:32px 24px; border-radius:24px; border:1px solid #4e5e8b; text-align:center; background:linear-gradient(145deg,#1c2750,#142b37); box-shadow:0 24px 80px #0008; }
+  .celebration .big { font-size:4rem; }
+  .celebration h2 { font-size:2rem; margin:8px 0; }
+  .celebration p { color:#c5d0eb; line-height:1.6; }
+  .footer { color:var(--muted); font-size:.8rem; text-align:center; margin-top:28px; line-height:1.6; }
+  .edit-note { color:var(--muted); font-size:.82rem; margin-top:8px; }
+  @media (max-width:720px) {
+    header { align-items:flex-start; flex-direction:column; }
+    .stats { grid-template-columns:1fr; gap:10px; }
+    .stat { padding:14px 16px; }
+    .stat-value { font-size:1.5rem; }
+    .grid { grid-template-columns:1fr; }
+    .section-title { align-items:flex-start; flex-direction:column; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">A study journey for two</div>
+      <h1>Mushfeek <span style="color:var(--accent2)">&amp;</span> Haifa <span aria-hidden="true">♡</span></h1>
+      <p class="sub">Your shared study goal space. Track your own subjects, exchange progress with each other, and celebrate every win together.</p>
+    </div>
+    <div class="header-actions">
+      <button id="partnerBtn" class="primary">♡ Pair with Haifa</button>
+      <button id="exportBtn" title="Export your progress so your partner can view it">Share my progress</button>
+      <button id="importBtn">View Haifa's progress</button>
+      <input id="partnerFile" type="file" accept=".json,application/json" hidden>
+      <button id="resetBtn">Reset tracker</button>
+    </div>
+  </header>
+
+  <section class="stats" aria-label="Study statistics">
+    <div class="stat"><div class="stat-label">Overall progress</div><div class="stat-value" id="overallStat">0%</div></div>
+    <div class="stat"><div class="stat-label">Study days completed</div><div class="stat-value" id="daysStat">0 / 47</div></div>
+    <div class="stat"><div class="stat-label">Subjects completed</div><div class="stat-value" id="subjectsStat">0 / 8</div></div>
+  </section>
+
+  <section class="progress-panel">
+    <div class="progress-head"><strong>Mushfeek's study journey</strong><span id="progressLabel">0% complete</span></div>
+    <div class="bar" role="progressbar" aria-label="Overall study progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="overallBar"><div class="bar-fill" id="overallFill"></div></div>
+    <p class="edit-note">Your progress saves automatically in this browser. English is set to 3 days for now—you can change it below. Haifa's progress is private until she chooses to share her progress file with you.</p>
+  </section>
+
+  <section class="partner-panel" id="partnerPanel" style="display:none;background:rgba(19,27,47,.92);border:1px solid var(--border);border-radius:18px;padding:20px;margin:0 0 26px;">
+    <div class="progress-head"><strong>♡ Haifa's study progress</strong><span id="partnerPercent">Waiting to pair</span></div>
+    <div class="bar" role="progressbar" aria-label="Haifa's study progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="partnerBar"><div class="bar-fill" id="partnerFill"></div></div>
+    <p id="partnerSummary" class="sub" style="margin-top:12px">To connect, both of you open this website on your own devices. Haifa can choose “Share my progress” and send you the downloaded JSON file. Import it here to view her latest progress.</p>
+    <div id="partnerSubjects" class="grid" style="margin-top:16px"></div>
+    <p class="edit-note">This HTML-only version shares progress by exchanging a file; it does not sync live automatically between devices. You can import a new file whenever Haifa updates her progress.</p>
+  </section>
+
+  <div class="section-title">
+    <div><h2>Start with the easier subjects</h2><p>Build momentum with these first.</p></div>
+    <span class="tag easy">EASIER</span>
+  </div>
+  <div class="grid" id="easyGrid"></div>
+
+  <div class="section-title">
+    <div><h2>Then tackle the harder subjects</h2><p>Small steps add up. You’ve got this.</p></div>
+    <span class="tag hard">HARDER</span>
+  </div>
+  <div class="grid" id="hardGrid"></div>
+
+  <section class="empty-state" id="completeState">
+    <div class="emoji">🏆🎉📚</div>
+    <h2>You did it. Every subject is complete!</h2>
+    <p>You stayed with your plan and finished all your study days. Be proud of yourself—you earned this celebration!</p>
+    <button class="primary" id="celebrateAgain">Celebrate again 🎉</button>
+  </section>
+  <p class="footer">Made for your goals • Keep showing up, one day at a time ✨</p>
+</div>
+
+<div class="toast" id="celebrationModal" role="dialog" aria-modal="true" aria-labelledby="celebrationTitle">
+  <div class="celebration">
+    <div class="big">🎉🏆✨</div>
+    <h2 id="celebrationTitle">YOU COMPLETED EVERYTHING!</h2>
+    <p>All 8 subjects. Every study day. That’s a huge achievement—congratulations! Take a moment to feel proud of your hard work.</p>
+    <button class="primary" id="closeModal">Let's go! 💪</button>
+  </div>
+</div>
+
+<script>
+const initialSubjects = [
+  { id: "english", name: "English", days: 3, group: "easy" },
+  { id: "ict", name: "I.C.T", days: 3, group: "easy" },
+  { id: "islam", name: "Islam", days: 6, group: "easy" },
+  { id: "history", name: "History", days: 7, group: "hard" },
+  { id: "maths", name: "Maths", days: 7, group: "hard" },
+  { id: "science", name: "Science", days: 7, group: "hard" },
+  { id: "english-lit", name: "English Literature", days: 7, group: "hard" },
+  { id: "sinhala", name: "Sinhala", days: 7, group: "hard" }
+];
+const STORAGE_KEY = "studyQuestTracker_v1";
+let subjects = structuredClone(initialSubjects);
+let state = loadState();
+let celebrated = false;
+
+function loadState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (saved && saved.subjects) {
+      subjects = initialSubjects.map(s => {
+        const old = saved.subjects[s.id] || {};
+        const days = Number.isInteger(old.days) && old.days >= 1 && old.days <= 60 ? old.days : s.days;
+        return {...s, days};
+      });
+      return { subjects: saved.subjects, allDoneShown: !!saved.allDoneShown };
+    }
+  } catch (e) {}
+  return { subjects: {}, allDoneShown: false };
+}
+function subjectState(s) {
+  const saved = state.subjects[s.id] || {};
+  const doneDays = Array.isArray(saved.doneDays) ? saved.doneDays : [];
+  return { doneDays: doneDays.filter(n => Number.isInteger(n) && n >= 1 && n <= s.days), complete: !!saved.complete };
+}
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+function renderSubject(s) {
+  const ss = subjectState(s);
+  const done = ss.complete || ss.doneDays.length >= s.days;
+  const card = document.createElement("article");
+  card.className = "subject" + (done ? " done" : "");
+  card.dataset.subject = s.id;
+  const top = document.createElement("div");
+  top.className = "subject-top";
+  const info = document.createElement("div");
+  const title = document.createElement("h3");
+  title.textContent = s.name;
+  const meta = document.createElement("div");
+  meta.className = "meta";
+  meta.textContent = `${s.days} study days planned`;
+  info.append(title, meta);
+  const badge = document.createElement("span");
+  badge.className = "tag " + (s.group === "easy" ? "easy" : "hard");
+  badge.textContent = done ? "COMPLETED ✓" : (s.group === "easy" ? "EASIER" : "HARDER");
+  top.append(info, badge);
+  const days = document.createElement("div");
+  days.className = "days";
+  for (let i = 1; i <= s.days; i++) {
+    const label = document.createElement("label");
+    label.className = "day" + (ss.doneDays.includes(i) || ss.complete ? " checked" : "");
+    const check = document.createElement("input");
+    check.type = "checkbox";
+    check.checked = ss.doneDays.includes(i) || ss.complete;
+    check.disabled = ss.complete;
+    check.setAttribute("aria-label", `${s.name}, day ${i} complete`);
+    check.addEventListener("change", () => toggleDay(s.id, i, check.checked));
+    const text = document.createElement("span");
+    text.textContent = `Day ${i}`;
+    label.append(check, text);
+    days.append(label);
+  }
+  const foot = document.createElement("div");
+  foot.className = "subject-foot";
+  const prog = document.createElement("div");
+  prog.className = "subject-progress";
+  prog.innerHTML = `<b>${done ? s.days : ss.doneDays.length}</b> / ${s.days} days done`;
+  const actions = document.createElement("div");
+  actions.style.display = "flex";
+  actions.style.gap = "7px";
+  const edit = document.createElement("button");
+  edit.className = "small";
+  edit.textContent = "Edit days";
+  edit.disabled = done;
+  edit.addEventListener("click", () => editDays(s.id));
+  const finish = document.createElement("button");
+  finish.className = "finish" + (done ? "" : " primary");
+  finish.textContent = done ? "Subject finished ✓" : "Finish subject";
+  finish.disabled = done;
+  finish.addEventListener("click", () => finishSubject(s.id));
+  actions.append(edit, finish);
+  foot.append(prog, actions);
+  card.append(top, days, foot);
+  return card;
+}
+function render() {
+  const easyGrid = document.getElementById("easyGrid");
+  const hardGrid = document.getElementById("hardGrid");
+  easyGrid.replaceChildren(); hardGrid.replaceChildren();
+  subjects.filter(s => s.group === "easy").forEach(s => easyGrid.append(renderSubject(s)));
+  subjects.filter(s => s.group === "hard").forEach(s => hardGrid.append(renderSubject(s)));
+  updateStats();
+}
+function toggleDay(id, day, checked) {
+  const s = subjects.find(x => x.id === id);
+  const ss = subjectState(s);
+  const set = new Set(ss.doneDays);
+  if (checked) set.add(day); else set.delete(day);
+  state.subjects[id] = {...state.subjects[id], days: s.days, doneDays: [...set].sort((a,b)=>a-b), complete: false};
+  if (set.size >= s.days) {
+    state.subjects[id].complete = true;
+  }
+  save(); render(); checkAllComplete();
+}
+function finishSubject(id) {
+  const s = subjects.find(x => x.id === id);
+  if (!confirm(`Mark all ${s.days} study days for ${s.name} as complete?`)) return;
+  state.subjects[id] = {days: s.days, doneDays: Array.from({length:s.days}, (_,i)=>i+1), complete: true};
+  save(); render(); checkAllComplete();
+}
+function editDays(id) {
+  const s = subjects.find(x => x.id === id);
+  const answer = prompt(`How many study days do you want for ${s.name}? (1–60)`, String(s.days));
+  if (answer === null) return;
+  const n = Number(answer);
+  if (!Number.isInteger(n) || n < 1 || n > 60) {
+    alert("Please enter a whole number from 1 to 60.");
+    return;
+  }
+  s.days = n;
+  const old = state.subjects[id] || {};
+  const doneDays = (old.doneDays || []).filter(d => d <= n);
+  state.subjects[id] = {...old, days:n, doneDays, complete: !!old.complete && doneDays.length >= n};
+  save(); render(); checkAllComplete();
+}
+function updateStats() {
+  const totalDays = subjects.reduce((sum,s)=>sum+s.days,0);
+  let doneDays = 0, doneSubjects = 0;
+  subjects.forEach(s => {
+    const ss = subjectState(s);
+    const count = ss.complete ? s.days : ss.doneDays.length;
+    doneDays += count;
+    if (ss.complete || count >= s.days) doneSubjects++;
+  });
+  const pct = totalDays ? Math.round(doneDays / totalDays * 100) : 0;
+  document.getElementById("overallStat").textContent = pct + "%";
+  document.getElementById("daysStat").textContent = `${doneDays} / ${totalDays}`;
+  document.getElementById("subjectsStat").textContent = `${doneSubjects} / ${subjects.length}`;
+  document.getElementById("progressLabel").textContent = pct + "% complete";
+  document.getElementById("overallFill").style.width = pct + "%";
+  document.getElementById("overallBar").setAttribute("aria-valuenow", pct);
+  document.getElementById("completeState").classList.toggle("show", doneSubjects === subjects.length);
+}
+function checkAllComplete() {
+  const allDone = subjects.every(s => {
+    const ss = subjectState(s);
+    return ss.complete || ss.doneDays.length >= s.days;
+  });
+  if (allDone && !state.allDoneShown) {
+    state.allDoneShown = true; save(); showCelebration();
+  }
+  if (!allDone && state.allDoneShown) { state.allDoneShown = false; save(); }
+}
+function showCelebration() {
+  document.getElementById("celebrationModal").classList.add("show");
+}
+function closeCelebration() {
+  document.getElementById("celebrationModal").classList.remove("show");
+}
+document.getElementById("closeModal").addEventListener("click", closeCelebration);
+document.getElementById("celebrateAgain").addEventListener("click", showCelebration);
+document.getElementById("celebrationModal").addEventListener("click", e => {
+  if (e.target.id === "celebrationModal") closeCelebration();
+});
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (!confirm("Reset every subject and all checked days? This cannot be undone.")) return;
+  state = {subjects:{}, allDoneShown:false};
+  subjects = structuredClone(initialSubjects);
+  localStorage.removeItem(STORAGE_KEY);
+  closeCelebration(); render();
+});
+function progressExport() {
+  return {
+    app: "Mushfeek & Haifa Study Progress",
+    exportedAt: new Date().toISOString(),
+    owner: "Mushfeek",
+    subjects: subjects.map(s => ({
+      id: s.id, name: s.name, plannedDays: s.days,
+      doneDays: subjectState(s).doneDays,
+      complete: subjectState(s).complete
+    }))
+  };
+}
+document.getElementById("exportBtn").addEventListener("click", () => {
+  const payload = progressExport();
+  payload.owner = (prompt("Whose progress is this file for?", "Mushfeek") || "Mushfeek").trim() || "Mushfeek";
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const safeName = payload.owner.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "study";
+  const a = document.createElement("a"); a.href = url; a.download = safeName + "-study-progress.json"; a.click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById("partnerBtn").addEventListener("click", () => {
+  document.getElementById("partnerPanel").style.display = "block";
+  document.getElementById("partnerPanel").scrollIntoView({behavior:"smooth", block:"center"});
+  alert("To pair with Haifa: ask her to open the same website on her device, press “Share my progress”, and send you the downloaded JSON file. Then press “View Haifa's progress” here and import that file.");
+});
+document.getElementById("importBtn").addEventListener("click", () => {
+  document.getElementById("partnerFile").click();
+});
+document.getElementById("partnerFile").addEventListener("change", async event => {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    if (!Array.isArray(data.subjects)) throw new Error("That file does not contain study progress.");
+    const partnerPanel = document.getElementById("partnerPanel");
+    const partnerSubjects = document.getElementById("partnerSubjects");
+    partnerSubjects.replaceChildren();
+    let total = 0, done = 0, completedSubjects = 0;
+    data.subjects.forEach(s => {
+      const planned = Number(s.plannedDays ?? s.days ?? 0);
+      const finishedDays = Array.isArray(s.doneDays) ? s.doneDays.length : 0;
+      const count = s.complete ? planned : Math.min(finishedDays, planned);
+      total += planned; done += count;
+      if (s.complete || count >= planned) completedSubjects++;
+      const card = document.createElement("article");
+      card.className = "subject" + ((s.complete || count >= planned) ? " done" : "");
+      const title = document.createElement("h3");
+      title.textContent = s.name || "Subject";
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      meta.textContent = `${count} / ${planned} study days completed`;
+      const bar = document.createElement("div");
+      bar.className = "bar"; bar.style.marginTop = "14px";
+      const fill = document.createElement("div");
+      fill.className = "bar-fill";
+      fill.style.width = (planned ? Math.round(count / planned * 100) : 0) + "%";
+      bar.append(fill); card.append(title, meta, bar); partnerSubjects.append(card);
+    });
+    const pct = total ? Math.round(done / total * 100) : 0;
+    document.getElementById("partnerPercent").textContent = pct + "% complete";
+    document.getElementById("partnerFill").style.width = pct + "%";
+    document.getElementById("partnerBar").setAttribute("aria-valuenow", pct);
+    document.getElementById("partnerSummary").textContent =
+      `${data.owner === "Haifa" ? "Haifa" : (data.owner || "Partner")}'s latest shared update: ${done} of ${total} study days completed across ${completedSubjects} of ${data.subjects.length} subjects. Last exported: ${data.exportedAt ? new Date(data.exportedAt).toLocaleString() : "date unknown"}.`;
+    partnerPanel.style.display = "block";
+    partnerPanel.scrollIntoView({behavior:"smooth", block:"start"});
+  } catch (error) {
+    alert("I couldn't read that progress file. Ask Haifa to use “Share my progress” on this website, then try importing the downloaded JSON file.");
+  } finally {
+    event.target.value = "";
+  }
+});
+render();
+checkAllComplete();
+</script>
+</body>
+</html>
